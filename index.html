@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Application Installation Request</title>
+  <!-- APP_VERSION: 1.0.0 -->
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -210,6 +211,40 @@
     .empty-state { text-align: center; padding: 48px 20px; color: var(--muted); }
     .empty-state .emoji { font-size: 40px; display: block; margin-bottom: 12px; }
 
+    /* ── UPDATE BANNER ── */
+    #update-banner {
+      display: none;
+      position: fixed;
+      bottom: 28px; left: 50%; transform: translateX(-50%);
+      background: #1e293b;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.2);
+      z-index: 998;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      white-space: nowrap;
+    }
+    #update-banner.visible { display: flex; }
+    #update-banner .upd-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 5px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #update-banner .upd-btn:hover { background: var(--primary-hover); }
+    #update-banner .upd-dismiss {
+      background: none; border: none; color: #94a3b8;
+      cursor: pointer; font-size: 18px; line-height: 1; padding: 0 2px;
+    }
+
     @media (max-width: 600px) {
       .form-grid { grid-template-columns: 1fr; }
       .stats-row { grid-template-columns: 1fr; }
@@ -376,6 +411,13 @@
   </div>
 </div>
 
+<!-- UPDATE BANNER -->
+<div id="update-banner">
+  🚀 A new version is available!
+  <button class="upd-btn" onclick="applyUpdate()">Reload to update</button>
+  <button class="upd-dismiss" onclick="dismissUpdate()" title="Dismiss">✕</button>
+</div>
+
 <!-- TOAST -->
 <div id="toast">✅ Request submitted successfully!</div>
 
@@ -510,6 +552,34 @@
     localStorage.removeItem(STORAGE_KEY);
     renderDashboard();
   }
+
+  // ── AUTO-UPDATE FROM GITHUB ──
+  const GITHUB_RAW = 'https://raw.githubusercontent.com/akkadar/ai-install-requests/main/index.html';
+  const CURRENT_VERSION = '1.0.0';
+
+  async function checkForUpdates() {
+    try {
+      const res = await fetch(GITHUB_RAW + '?t=' + Date.now());
+      if (!res.ok) return;
+      const html = await res.text();
+      const match = html.match(/APP_VERSION:\s*([\d.]+)/);
+      if (match && match[1] !== CURRENT_VERSION) {
+        document.getElementById('update-banner').classList.add('visible');
+      }
+    } catch(e) { /* offline or CORS — silently ignore */ }
+  }
+
+  function applyUpdate() {
+    window.location.reload(true);
+  }
+
+  function dismissUpdate() {
+    document.getElementById('update-banner').classList.remove('visible');
+  }
+
+  // Check on load, then every 5 minutes
+  checkForUpdates();
+  setInterval(checkForUpdates, 5 * 60 * 1000);
 </script>
 </body>
 </html>
