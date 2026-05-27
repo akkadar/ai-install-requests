@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Application Installation Request</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --success: #10b981;
+      --danger: #ef4444;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --muted: #64748b;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-brand {
+      font-weight: 700;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-brand span { font-size: 20px; }
+    .nav-tabs { display: flex; gap: 4px; margin-left: auto; }
+    .tab-btn {
+      padding: 6px 16px;
+      border: none;
+      background: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      transition: all .15s;
+    }
+    .tab-btn.active { background: var(--primary); color: #fff; }
+    .tab-btn:not(.active):hover { background: var(--bg); color: var(--text); }
+
+    /* ── PAGES ── */
+    .page { display: none; max-width: 860px; margin: 0 auto; padding: 32px 20px; }
+    .page.active { display: block; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+    .card h2 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+    .card .subtitle { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+    /* ── FORM ── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 13px; font-weight: 500; color: var(--text); }
+    label .req { color: var(--danger); margin-left: 2px; }
+    input, select, textarea {
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--bg);
+      transition: border-color .15s, box-shadow .15s;
+      outline: none;
+      width: 100%;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+    }
+    textarea { resize: vertical; min-height: 90px; }
+    .hint { font-size: 12px; color: var(--muted); }
+
+    /* priority badges inside select */
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .btn {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, transform .1s;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-primary:active { transform: scale(.98); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 28px; right: 28px;
+      background: var(--success);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 20px rgba(0,0,0,.15);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all .3s ease;
+      z-index: 999;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── DASHBOARD STATS ── */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-card .stat-num { font-size: 32px; font-weight: 700; color: var(--primary); }
+    .stat-card .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    /* ── BAR CHART ── */
+    .chart-wrap { margin-top: 8px; }
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+    .bar-label { width: 160px; text-align: right; color: var(--text); flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bar-track { flex: 1; height: 22px; background: var(--bg); border-radius: 6px; overflow: hidden; }
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), #818cf8);
+      border-radius: 6px;
+      transition: width .5s ease;
+    }
+    .bar-count { width: 28px; font-weight: 600; color: var(--text); }
+
+    /* ── TABLE ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg); }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+    .pill-high   { background: #fee2e2; color: #b91c1c; }
+    .pill-medium { background: #fef3c7; color: #92400e; }
+    .pill-low    { background: #d1fae5; color: #065f46; }
+
+    .empty-state { text-align: center; padding: 48px 20px; color: var(--muted); }
+    .empty-state .emoji { font-size: 40px; display: block; margin-bottom: 12px; }
+
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr; }
+      .bar-label { width: 100px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand"><span>🤖</span> AI Install Requests</div>
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="showPage('form')">New Request</button>
+    <button class="tab-btn" onclick="showPage('dashboard')">Dashboard</button>
+  </div>
+</nav>
+
+<!-- FORM PAGE -->
+<div id="page-form" class="page active">
+  <div class="card">
+    <h2>AI Application Installation Request</h2>
+    <p class="subtitle">Submit a request to install an AI-powered application for your team or personal use.</p>
+
+    <form id="requestForm" novalidate>
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label for="firstName">First Name <span class="req">*</span></label>
+          <input type="text" id="firstName" placeholder="Jane" required />
+        </div>
+
+        <div class="form-group">
+          <label for="lastName">Last Name <span class="req">*</span></label>
+          <input type="text" id="lastName" placeholder="Smith" required />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Work Email <span class="req">*</span></label>
+          <input type="email" id="email" placeholder="jane.smith@company.com" required />
+        </div>
+
+        <div class="form-group">
+          <label for="department">Department <span class="req">*</span></label>
+          <select id="department" required>
+            <option value="">— Select department —</option>
+            <option>Engineering</option>
+            <option>Product</option>
+            <option>Design</option>
+            <option>Marketing</option>
+            <option>Sales</option>
+            <option>Finance</option>
+            <option>HR</option>
+            <option>Legal</option>
+            <option>Operations</option>
+            <option>Customer Success</option>
+            <option>Data & Analytics</option>
+            <option>Security</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div class="form-group full">
+          <label for="appName">AI Application Name <span class="req">*</span></label>
+          <input type="text" id="appName" placeholder="e.g. GitHub Copilot, ChatGPT Enterprise, Midjourney…" required />
+        </div>
+
+        <div class="form-group">
+          <label for="vendor">Vendor / Provider</label>
+          <input type="text" id="vendor" placeholder="e.g. OpenAI, Microsoft, Google" />
+        </div>
+
+        <div class="form-group">
+          <label for="priority">Priority <span class="req">*</span></label>
+          <select id="priority" required>
+            <option value="">— Select priority —</option>
+            <option value="High">🔴 High — Blocking work</option>
+            <option value="Medium">🟡 Medium — Significant benefit</option>
+            <option value="Low">🟢 Low — Nice to have</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="users">Number of Users</label>
+          <input type="number" id="users" min="1" placeholder="e.g. 5" />
+        </div>
+
+        <div class="form-group">
+          <label for="poNumber">PO Number</label>
+          <input type="text" id="poNumber" placeholder="e.g. PO-2026-00123" />
+        </div>
+
+        <div class="form-group full">
+          <label for="justification">Business Justification <span class="req">*</span></label>
+          <textarea id="justification" placeholder="Describe how this AI application will benefit your team and improve productivity…" required></textarea>
+        </div>
+
+        <div class="form-group full">
+          <label for="dataTypes">Types of Data Involved</label>
+          <input type="text" id="dataTypes" placeholder="e.g. Source code, customer emails, internal documents…" />
+          <span class="hint">List any sensitive or regulated data this tool may access.</span>
+        </div>
+
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-primary" onclick="submitForm()">Submit Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- DASHBOARD PAGE -->
+<div id="page-dashboard" class="page">
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" id="stat-total">0</div>
+      <div class="stat-label">Total Requests</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-high">0</div>
+      <div class="stat-label">High Priority</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-depts">0</div>
+      <div class="stat-label">Departments</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Requests by Department</h2>
+    <p class="subtitle">Total number of AI install requests submitted per department.</p>
+    <div class="chart-wrap" id="chart"></div>
+  </div>
+
+  <div class="card">
+    <h2>All Requests</h2>
+    <p class="subtitle">Full log of submitted requests.</p>
+    <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
+      <button class="btn btn-danger btn-sm" onclick="clearAll()">Clear All Data</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Department</th>
+            <th>Application</th>
+            <th>Priority</th>
+            <th>Users</th>
+            <th>PO Number</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="requests-table"></tbody>
+      </table>
+      <div id="empty-state" class="empty-state" style="display:none">
+        <span class="emoji">📭</span>
+        No requests yet. Submit the first one!
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast">✅ Request submitted successfully!</div>
+
+<script>
+  const STORAGE_KEY = 'ai_install_requests';
+  let _mem = null; // fallback when localStorage is unavailable
+
+  function getRequests() {
+    if (_mem !== null) return [..._mem];
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function saveRequests(data) {
+    if (_mem !== null) { _mem = [...data]; return; }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+    catch { _mem = [...data]; }
+  }
+
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    document.querySelectorAll('.tab-btn')[name === 'form' ? 0 : 1].classList.add('active');
+    if (name === 'dashboard') renderDashboard();
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  function submitForm() {
+    const f = (id) => document.getElementById(id).value.trim();
+    const required = ['firstName', 'lastName', 'email', 'department', 'appName', 'priority', 'justification'];
+
+    for (const id of required) {
+      const el = document.getElementById(id);
+      if (!el.value.trim()) {
+        el.focus();
+        el.style.borderColor = 'var(--danger)';
+        el.style.boxShadow = '0 0 0 3px rgba(239,68,68,.15)';
+        setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 2000);
+        showToast('⚠️ Please fill in all required fields.');
+        document.getElementById('toast').style.background = '#f59e0b';
+        setTimeout(() => document.getElementById('toast').style.background = '', 3100);
+        return;
+      }
+    }
+
+    const requests = getRequests();
+    requests.unshift({
+      id: Date.now(),
+      firstName: f('firstName'),
+      lastName: f('lastName'),
+      email: f('email'),
+      department: f('department'),
+      appName: f('appName'),
+      vendor: f('vendor'),
+      priority: f('priority'),
+      users: f('users') || '—',
+      poNumber: f('poNumber') || '—',
+      justification: f('justification'),
+      dataTypes: f('dataTypes'),
+      date: new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })
+    });
+    saveRequests(requests);
+
+    document.getElementById('requestForm').reset();
+    showToast('✅ Request submitted successfully!');
+    document.getElementById('toast').style.background = '#10b981';
+  }
+
+  function renderDashboard() {
+    const requests = getRequests();
+
+    document.getElementById('stat-total').textContent = requests.length;
+    document.getElementById('stat-high').textContent = requests.filter(r => r.priority === 'High').length;
+
+    // count by department
+    const deptMap = {};
+    for (const r of requests) {
+      deptMap[r.department] = (deptMap[r.department] || 0) + 1;
+    }
+    document.getElementById('stat-depts').textContent = Object.keys(deptMap).length;
+
+    // chart
+    const chart = document.getElementById('chart');
+    const sorted = Object.entries(deptMap).sort((a, b) => b[1] - a[1]);
+    const max = sorted[0]?.[1] || 1;
+
+    if (sorted.length === 0) {
+      chart.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:12px 0">No data yet.</p>';
+    } else {
+      chart.innerHTML = sorted.map(([dept, count]) => `
+        <div class="bar-row">
+          <div class="bar-label" title="${dept}">${dept}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${Math.round(count/max*100)}%"></div>
+          </div>
+          <div class="bar-count">${count}</div>
+        </div>`).join('');
+    }
+
+    // table
+    const tbody = document.getElementById('requests-table');
+    const empty = document.getElementById('empty-state');
+
+    if (requests.length === 0) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+    } else {
+      empty.style.display = 'none';
+      tbody.innerHTML = requests.map((r, i) => `
+        <tr>
+          <td style="color:var(--muted)">${requests.length - i}</td>
+          <td>${r.firstName} ${r.lastName}</td>
+          <td>${r.department}</td>
+          <td><strong>${r.appName}</strong>${r.vendor ? `<br><span style="color:var(--muted);font-size:12px">${r.vendor}</span>` : ''}</td>
+          <td><span class="pill pill-${r.priority.toLowerCase()}">${r.priority}</span></td>
+          <td>${r.users}</td>
+          <td style="color:var(--muted)">${r.poNumber || '—'}</td>
+          <td style="white-space:nowrap;color:var(--muted)">${r.date}</td>
+        </tr>`).join('');
+    }
+  }
+
+  function clearAll() {
+    if (!confirm('Delete all requests? This cannot be undone.')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    renderDashboard();
+  }
+</script>
+</body>
+</html>
